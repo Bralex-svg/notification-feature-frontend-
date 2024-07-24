@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase Test</title>
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-messaging.js"></script>
+    <script>
+        var firebaseConfig = {
+            apiKey: "AIzaSyC8qRC07cy8UekOVpUG3e9GlYS7SWY-YQk",
+            authDomain: "notification-demo-2b0ca.firebaseapp.com",
+            projectId: "notification-demo-2b0ca",
+            storageBucket: "notification-demo-2b0ca.appspot.com",
+            messagingSenderId: "98976512962",
+            appId: "1:98976512962:web:c9c2a2b5447a987e41b45b",
+        };
+
+        firebase.initializeApp(firebaseConfig);
+
+        const messaging = firebase.messaging();
+        messaging.usePublicVapidKey("BFSDLyfdkNFS4w428wqH9lYqIPruIu9VQoyUosTeD7ihZlU4iAG-59sJhrV3rcTwKPyyTXvmTeW9tI-YU1Hwjg4");
+
+        async function requestNotificationPermission() {
+            try {
+                await messaging.requestPermission();
+                const token = await messaging.getToken();
+                console.log('FCM Token:', token);
+                localStorage.setItem('fcm_token', token);
+                return token;
+            } catch (err) {
+                console.error('Unable to get permission to notify.', err);
+                return null;
+            }
+        }
+
+        async function handleSignup() {
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const token = await requestNotificationPermission();
+
+            const signupData = {
+                email: email,
+                password: password,
+                role: "user",  
+                notification: {
+                    browser_token: token
+                }
+            };
+
+            try {
+                const response = await fetch('http://localhost:5000/client/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(signupData),
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    console.log('Signup success:', data);
+                } else {
+                    console.error('Signup error:', data);
+                }
+            } catch (error) {
+                console.error('Signup error:', error);
+            }
+        }
+
+        async function handleLogin() {
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    const token = await requestNotificationPermission();
+
+    const loginData = {
+        email: email,
+        password: password,
+        browser_token: token
+    };
+
+    console.log("Login data being sent:", loginData);
+
+    try {
+        const response = await fetch('http://localhost:5000/client/signin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(loginData),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            console.log('Login success:', data);
+        } else {
+            console.error('Login error:', data);
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+    }
+}
+
+    </script>
+</head>
+<body>
+    <h1>Firebase Test</h1>
+    <p>Check the console for output.</p>
+    
+    <div>
+        <h2>Signup</h2>
+        <input id="signup-email" type="email" placeholder="Email" />
+        <input id="signup-password" type="password" placeholder="Password" />
+        <button onclick="handleSignup()">Signup</button>
+    </div>
+
+    <div>
+        <h2>Login</h2>
+        <input id="login-email" type="email" placeholder="Email" />
+        <input id="login-password" type="password" placeholder="Password" />
+        <button onclick="handleLogin()">Login</button>
+    </div>
+</body>
+</html>
